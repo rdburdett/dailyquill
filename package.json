@@ -13,6 +13,9 @@
     "release:patch": "pnpm version patch --no-git-tag-version && pnpm run sync-version && pnpm run build:extension",
     "release:minor": "pnpm version minor --no-git-tag-version && pnpm run sync-version && pnpm run build:extension",
     "release:major": "pnpm version major --no-git-tag-version && pnpm run sync-version && pnpm run build:extension",
+    "publish:store": "vite build && node scripts/zip-extension.mjs && node scripts/publish-chrome-store.mjs",
+    "publish:store:draft": "vite build && node scripts/zip-extension.mjs && node scripts/publish-chrome-store.mjs --upload-only",
+    "publish:store:status": "node scripts/publish-chrome-store.mjs --status",
     "resize-icons": "node resize-icons.js"
   },
   "dependencies": {

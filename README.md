@@ -66,6 +66,10 @@ npm run build:extension
 
 This creates an optimized build in the `dist` folder ready for Chrome.
 
+### Publishing to the Chrome Web Store
+
+Releases are published through GitHub Actions or `npm run publish:store`. See [PUBLISHING.md](PUBLISHING.md) for how to publish and the one-time credentials setup.
+
 ## API Sources
 
 - **ZenQuotes**: Primary source for daily quotes

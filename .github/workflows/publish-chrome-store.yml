@@ -1,0 +1,85 @@
+name: Publish to Chrome Web Store
+
+on:
+  # Push a tag like v1.2.0 (matching manifest.json) to publish that version
+  push:
+    tags:
+      - 'v*'
+  # Or run it by hand from the Actions tab (or `gh workflow run`)
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: 'Version bump to commit before publishing (none = publish the current version)'
+        type: choice
+        options: [patch, minor, major, none]
+        default: patch
+      mode:
+        description: 'publish = submit for review; upload-only = save as a draft in the dashboard'
+        type: choice
+        options: [publish, upload-only]
+        default: publish
+
+permissions:
+  contents: write
+
+concurrency:
+  group: chrome-web-store
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Bump version
+        if: github.event_name == 'workflow_dispatch' && inputs.bump != 'none'
+        run: |
+          npm version "${{ inputs.bump }}" --no-git-tag-version
+          node scripts/sync-manifest-version.mjs
+
+      - name: Check tag matches manifest version
+        if: github.event_name == 'push'
+        run: |
+          version=$(node -p "require('./manifest.json').version")
+          if [ "${GITHUB_REF_NAME}" != "v${version}" ]; then
+            echo "::error::Tag ${GITHUB_REF_NAME} does not match manifest.json version ${version}"
+            exit 1
+          fi
+
+      - name: Build and zip
+        run: npx vite build && node scripts/zip-extension.mjs
+
+      - name: Upload to Chrome Web Store
+        env:
+          CWS_EXTENSION_ID: ${{ secrets.CWS_EXTENSION_ID }}
+          CWS_PUBLISHER_ID: ${{ secrets.CWS_PUBLISHER_ID }}
+          CWS_CLIENT_ID: ${{ secrets.CWS_CLIENT_ID }}
+          CWS_CLIENT_SECRET: ${{ secrets.CWS_CLIENT_SECRET }}
+          CWS_REFRESH_TOKEN: ${{ secrets.CWS_REFRESH_TOKEN }}
+        run: node scripts/publish-chrome-store.mjs ${{ inputs.mode == 'upload-only' && '--upload-only' || '' }}
+
+      # Only commit the bump once the store has accepted the upload, so a failed
+      # run doesn't leave a version in git that never shipped
+      - name: Commit version bump and tag
+        if: github.event_name == 'workflow_dispatch' && inputs.bump != 'none'
+        run: |
+          version=$(node -p "require('./manifest.json').version")
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json manifest.json
+          git commit -m "Release v${version}"
+          git tag "v${version}"
+          git push origin "HEAD:${GITHUB_REF_NAME}" "v${version}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: extension-zip
+          path: dist/*.zip
