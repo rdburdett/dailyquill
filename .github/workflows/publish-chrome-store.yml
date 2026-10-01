@@ -55,6 +55,10 @@ jobs:
           fi
 
       - name: Build and zip
+        env:
+          # Optional: without these the extension sends no usage stats
+          VITE_GA_MEASUREMENT_ID: ${{ secrets.GA_MEASUREMENT_ID }}
+          VITE_GA_API_SECRET: ${{ secrets.GA_API_SECRET }}
         run: npx vite build && node scripts/zip-extension.mjs
 
       - name: Upload to Chrome Web Store

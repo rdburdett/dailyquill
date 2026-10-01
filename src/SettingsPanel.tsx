@@ -53,6 +53,8 @@ interface SettingsPanelProps {
 	}[];
 	enabledSources: QuoteSourceId[];
 	onEnabledSourcesChange: (sources: QuoteSourceId[]) => void;
+	shareUsageStats: boolean;
+	onShareUsageStatsChange: (share: boolean) => void;
 }
 
 export const SettingsPanel: React.FC<SettingsPanelProps> = ({
@@ -86,6 +88,8 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 	fontSizeSteps,
 	enabledSources,
 	onEnabledSourcesChange,
+	shareUsageStats,
+	onShareUsageStatsChange,
 }) => {
 	// Shared style constants
 	const styles = {
@@ -490,6 +494,24 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 									}
 								)}
 							</div>
+						</div>
+						<div className={styles.divider} />
+						<div className={styles.sectionContainer}>
+							<div className="flex items-center justify-between">
+								<label className={styles.sectionTitle}>
+									Share anonymous usage stats
+								</label>
+								<input
+									type="checkbox"
+									className="toggle toggle-primary toggle-sm"
+									checked={shareUsageStats}
+									onChange={(e) => onShareUsageStatsChange(e.target.checked)}
+									aria-label="Share anonymous usage stats"
+								/>
+							</div>
+							<p className="text-sm opacity-70">
+								Counts new tabs and which quote sources are used. No quotes, browsing history or personal details are sent.
+							</p>
 						</div>
 					</div>
 

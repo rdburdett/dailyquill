@@ -23,6 +23,8 @@ export interface ExtensionSettings {
 	backgroundLightnessLight?: number
 	backgroundLightnessDark?: number
 	fontSize?: number
+	// Anonymous usage stats (see analytics.ts); on unless the user turns it off
+	shareUsageStats?: boolean
 	cachedQuote?: {
 		text: string
 		author: string
@@ -71,7 +73,8 @@ class StorageService {
 		selectedLightFont: 'elegant', // Playfair Display for light mode
 		selectedDarkFont: 'monospace', // Ubuntu Mono for dark mode
 		fontFollowsTheme: true, // Default to automatic font switching
-		selectedQuoteFont: 'elegant' // Fallback for single font mode
+		selectedQuoteFont: 'elegant', // Fallback for single font mode
+		shareUsageStats: true
 	}
 
 	async getSettings(): Promise<ExtensionSettings> {
