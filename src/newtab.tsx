@@ -4,6 +4,7 @@ import { quoteService, type Quote } from "./quoteService";
 import { storageService } from "./storageService";
 import { quoteFonts, uiFonts, defaultFonts } from "./colors";
 import { SettingsPanel } from "./SettingsPanel";
+import { trackEvent } from "./analytics";
 import { sanitizeSources, type QuoteSourceId } from "./sources";
 import SwipeQuote from "./components/SwipeQuote";
 import PlainQuote from "./components/PlainQuote";
@@ -61,6 +62,8 @@ function NewTabApp() {
 	const [showSettings, setShowSettings] = useState(false);
 	const [settingsPanelVisible, setSettingsPanelVisible] = useState(false);
 	const closeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+	const trackedOpenRef = useRef(false);
+	const [shareUsageStats, setShareUsageStats] = useState(true);
 	const [backgroundLightnessLight, setBackgroundLightnessLight] =
 		useState(50);
 	const [backgroundLightnessDark, setBackgroundLightnessDark] = useState(50);
@@ -160,6 +163,7 @@ function NewTabApp() {
 						setFontSize(saved.fontSize);
 					}
 					setEnabledSources(sanitizeSources(saved.enabledSources));
+					setShareUsageStats(saved.shareUsageStats !== false);
 				}
 			} catch (error) {
 				// Silently handle loading errors
@@ -395,6 +399,7 @@ function NewTabApp() {
 		if (prefetchedQuote) {
 			// Use prefetched quote immediately - no loading state needed
 			setQuote(prefetchedQuote);
+			trackEvent("next_quote", { quote_source: prefetchedQuote.source });
 			// Prefetch the next quote in the background
 			quoteService.prefetchNextQuote();
 		} else {
@@ -412,6 +417,7 @@ function NewTabApp() {
 
 			setQuote(newQuote);
 			setLoading(false);
+			trackEvent("next_quote", { quote_source: newQuote.source || "Unknown" });
 
 			// Prefetch the next quote in the background
 			quoteService.prefetchNextQuote();
@@ -423,9 +429,23 @@ function NewTabApp() {
 		const next = sanitizeSources(sources);
 		setEnabledSources(next);
 		await storageService.saveSettings({ enabledSources: next });
+		trackEvent("sources_changed", { enabled_sources: next.join(",") });
 		await storageService.clearQuoteCache();
 		await refreshQuote();
 	};
+
+	// Turning this off stops all analytics events (analytics.ts checks it before each send)
+	const handleShareUsageStatsChange = async (share: boolean) => {
+		setShareUsageStats(share);
+		await storageService.saveSettings({ shareUsageStats: share });
+	};
+
+	// Count each new tab once, when its first quote is on screen
+	useEffect(() => {
+		if (!quote || trackedOpenRef.current) return;
+		trackedOpenRef.current = true;
+		trackEvent("new_tab", { quote_source: quote.source || "Unknown" });
+	}, [quote]);
 
 	// Explicitly use storage to ensure Chrome Web Store detects it
 	const testStorageUsage = async () => {
@@ -723,6 +743,8 @@ function NewTabApp() {
 						onFontFollowsThemeChange={handleFontFollowsThemeChange}
 						enabledSources={enabledSources}
 						onEnabledSourcesChange={handleEnabledSourcesChange}
+						shareUsageStats={shareUsageStats}
+						onShareUsageStatsChange={handleShareUsageStatsChange}
 					/>
 				</div>
 			)}

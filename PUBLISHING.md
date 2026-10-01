@@ -78,3 +78,23 @@ To check the credentials without submitting anything, run
 
 If the workflow's final "Commit version bump and tag" step is rejected, `main` is
 probably protected; allow GitHub Actions to push to it or use tags instead.
+
+## Usage stats (Google Analytics 4)
+
+The extension can send anonymous usage events to GA4: `new_tab` (with the quote's
+source), `next_quote` and `sources_changed`. Each install gets a random ID; no quote
+text, browsing history or personal details are sent, and users can turn it off in
+Settings → "Share anonymous usage stats". Builds without the keys below send nothing.
+
+1. In [Google Analytics](https://analytics.google.com/), create a property (Admin →
+   Create → Property, e.g. "Daily Quill"), then a **Web** data stream. Any URL works
+   for the stream, for example your Vercel preview site.
+2. Open the stream and copy its **Measurement ID** (`G-XXXXXXX`).
+3. On the same page, open **Measurement Protocol API secrets → Create**, and copy the secret.
+4. Add both as GitHub repo secrets: `GA_MEASUREMENT_ID` and `GA_API_SECRET`
+   (and as `VITE_GA_MEASUREMENT_ID` / `VITE_GA_API_SECRET` in `.env` for local builds).
+5. In the Chrome Web Store dashboard, **Privacy** tab: tick **User activity**, certify the
+   disclosures, and set the privacy
+   policy URL to the `privacy.html` page on your Vercel site.
+
+Events appear in GA4 under Reports → Realtime within a minute of opening a new tab.
