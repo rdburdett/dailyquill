@@ -373,6 +373,57 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 						</div>
 						<div className={styles.divider} />
 						<div className={styles.sectionContainer}>
+							<label className={styles.sectionTitle}>Color</label>
+							<div className={styles.radioContainer}>
+								{Object.entries(semanticColorThemes).map(
+									([key]) => {
+										const isActive =
+											selectedSemanticTheme === key;
+										let radioClass = "radio";
+
+										// Use the semantic color for the radio button
+										switch (key) {
+											case "primary":
+												radioClass += " radio-primary";
+												break;
+											case "secondary":
+												radioClass +=
+													" radio-secondary";
+												break;
+											case "accent":
+												radioClass += " radio-accent";
+												break;
+											case "neutral":
+												radioClass += " radio-neutral";
+												break;
+											default:
+												radioClass += " radio-primary";
+										}
+
+										return (
+											<label
+												key={key}
+												className={styles.radioLabel}
+											>
+												<input
+													type="radio"
+													name="semantic-theme"
+													className={radioClass}
+													checked={isActive}
+													onChange={() =>
+														onSemanticThemeChange(
+															key
+														)
+													}
+												/>
+											</label>
+										);
+									}
+								)}
+							</div>
+						</div>
+						<div className={styles.divider} />
+						<div className={styles.sectionContainer}>
 							<label className={styles.sectionTitle}>
 								Quote Sources
 							</label>
@@ -443,57 +494,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 										})}
 								</div>
 							))}
-						</div>
-						<div className={styles.divider} />
-						<div className={styles.sectionContainer}>
-							<label className={styles.sectionTitle}>Color</label>
-							<div className={styles.radioContainer}>
-								{Object.entries(semanticColorThemes).map(
-									([key]) => {
-										const isActive =
-											selectedSemanticTheme === key;
-										let radioClass = "radio";
-
-										// Use the semantic color for the radio button
-										switch (key) {
-											case "primary":
-												radioClass += " radio-primary";
-												break;
-											case "secondary":
-												radioClass +=
-													" radio-secondary";
-												break;
-											case "accent":
-												radioClass += " radio-accent";
-												break;
-											case "neutral":
-												radioClass += " radio-neutral";
-												break;
-											default:
-												radioClass += " radio-primary";
-										}
-
-										return (
-											<label
-												key={key}
-												className={styles.radioLabel}
-											>
-												<input
-													type="radio"
-													name="semantic-theme"
-													className={radioClass}
-													checked={isActive}
-													onChange={() =>
-														onSemanticThemeChange(
-															key
-														)
-													}
-												/>
-											</label>
-										);
-									}
-								)}
-							</div>
 						</div>
 						<div className={styles.divider} />
 						<div className={styles.sectionContainer}>
