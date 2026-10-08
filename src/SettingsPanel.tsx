@@ -6,8 +6,7 @@ import {
 	semanticColorThemes,
 	daisyThemeCategories,
 } from "./colors";
-import DayNightSwitch from "./components/DayNightSwitch";
-import { MoonIcon, SunIcon } from "./components/Icons";
+import { MoonIcon, SunIcon, SystemIcon } from "./components/Icons";
 import { SupportModal } from "./components/SupportModal";
 import {
 	quoteSources,
@@ -23,7 +22,7 @@ interface SettingsPanelProps {
 	onSemanticThemeChange: (theme: string) => void;
 	id?: string;
 	selectedThemeMode: "system" | "light" | "dark";
-	onThemeModeChange: () => void;
+	onThemeModeChange: (mode: "system" | "light" | "dark") => void;
 	selectedQuoteFont: string;
 	onQuoteFontChange: (font: string) => void;
 	selectedUIFont: string;
@@ -97,7 +96,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 		sectionContainer: "flex flex-col gap-3",
 		divider: "divider my-0",
 		row: "flex items-center gap-3 min-h-8",
-		rowLabel: "w-20 shrink-0 text-sm",
+		rowLabel: "w-24 shrink-0 text-sm",
 	};
 
 	const radioColorClasses: Record<string, string> = {
@@ -107,26 +106,86 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 		neutral: "radio-neutral",
 	};
 
-	// Theme and font pickers edit the choice for whichever mode is showing
+	// Which of the light/dark choices is showing right now
 	const isDarkMode =
 		selectedThemeMode === "dark" ||
 		(selectedThemeMode === "system" &&
 			window.matchMedia("(prefers-color-scheme: dark)").matches);
-	const currentThemeCategory = isDarkMode
-		? daisyThemeCategories.dark
-		: daisyThemeCategories.light;
-	const selectedTheme = isDarkMode ? selectedDarkTheme : selectedLightTheme;
-	const onThemeChange = isDarkMode ? onDarkThemeChange : onLightThemeChange;
-	const selectedFont = fontFollowsTheme
-		? isDarkMode
-			? selectedDarkFont
-			: selectedLightFont
-		: selectedQuoteFont;
-	const onFontChange = fontFollowsTheme
-		? isDarkMode
-			? onDarkFontChange
-			: onLightFontChange
-		: onQuoteFontChange;
+
+	const themeModes = [
+		{ id: "system", name: "System", icon: <SystemIcon /> },
+		{ id: "light", name: "Light", icon: <SunIcon /> },
+		{ id: "dark", name: "Dark", icon: <MoonIcon /> },
+	] as const;
+
+	// Marks the light or dark picker that is currently applied
+	const inUseSlot = (inUse: boolean) => (
+		<span className="w-12 shrink-0 text-right">
+			{inUse && (
+				<span className="badge badge-xs badge-primary">in use</span>
+			)}
+		</span>
+	);
+
+	const themeRow = (
+		mode: "light" | "dark",
+		value: string,
+		onChange: (theme: string) => void
+	) => (
+		<div className={styles.row}>
+			<label htmlFor={`settings-${mode}-theme`} className={styles.rowLabel}>
+				{mode === "light" ? "Light theme" : "Dark theme"}
+			</label>
+			<select
+				id={`settings-${mode}-theme`}
+				className="select select-sm flex-1 min-w-0"
+				value={value}
+				onChange={(e) => onChange(e.target.value)}
+			>
+				{daisyThemeCategories[mode].themes.map((theme) => (
+					<option key={theme.id} value={theme.id}>
+						{theme.name}
+					</option>
+				))}
+			</select>
+			{inUseSlot(isDarkMode === (mode === "dark"))}
+		</div>
+	);
+
+	const fontRow = (
+		id: string,
+		label: string,
+		value: string,
+		onChange: (font: string) => void,
+		inUse?: boolean
+	) => (
+		<div className={styles.row}>
+			<label htmlFor={id} className={styles.rowLabel}>
+				{label}
+			</label>
+			<select
+				id={id}
+				className="select select-sm flex-1 min-w-0"
+				value={value}
+				onChange={(e) => onChange(e.target.value)}
+				style={{
+					fontFamily:
+						quoteFonts[value as keyof typeof quoteFonts]?.family,
+				}}
+			>
+				{Object.entries(quoteFonts).map(([key, font]) => (
+					<option
+						key={key}
+						value={key}
+						style={{ fontFamily: font.family }}
+					>
+						{font.name}
+					</option>
+				))}
+			</select>
+			{inUse !== undefined && inUseSlot(inUse)}
+		</div>
+	);
 
 	// Focus management
 	React.useEffect(() => {
@@ -209,10 +268,6 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 							Settings
 						</h3>
 						<div className="flex items-center gap-2">
-							<DayNightSwitch
-								selectedThemeMode={selectedThemeMode}
-								onThemeModeChange={onThemeModeChange}
-							/>
 							<button
 								className="close-btn btn btn-ghost btn-circle"
 								onClick={onClose}
@@ -304,32 +359,47 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 								Appearance
 							</label>
 							<div className={styles.row}>
-								<label
-									htmlFor="settings-theme"
-									className={styles.rowLabel}
+								<span className={styles.rowLabel}>Mode</span>
+								<div
+									className="join flex-1"
+									role="radiogroup"
+									aria-label="Light or dark mode"
 								>
-									Theme
-								</label>
-								<select
-									id="settings-theme"
-									className="select select-sm flex-1"
-									value={selectedTheme}
-									onChange={(e) =>
-										onThemeChange(e.target.value)
-									}
-								>
-									{currentThemeCategory.themes.map(
-										(theme) => (
-											<option
-												key={theme.id}
-												value={theme.id}
-											>
-												{theme.name}
-											</option>
-										)
-									)}
-								</select>
+									{themeModes.map((mode) => (
+										<button
+											key={mode.id}
+											type="button"
+											role="radio"
+											aria-checked={
+												selectedThemeMode === mode.id
+											}
+											className={`join-item btn btn-sm flex-1 gap-1 ${
+												selectedThemeMode === mode.id
+													? "btn-primary"
+													: "btn-soft"
+											}`}
+											onClick={() =>
+												onThemeModeChange(mode.id)
+											}
+										>
+											<span className="[&>svg]:w-4 [&>svg]:h-4">
+												{mode.icon}
+											</span>
+											{mode.name}
+										</button>
+									))}
+								</div>
 							</div>
+							{themeRow(
+								"light",
+								selectedLightTheme,
+								onLightThemeChange
+							)}
+							{themeRow(
+								"dark",
+								selectedDarkTheme,
+								onDarkThemeChange
+							)}
 							<div className={styles.row}>
 								<span className={styles.rowLabel}>Color</span>
 								<div
@@ -388,65 +458,46 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
 									</span>
 								</div>
 							</div>
-							<div className={styles.row}>
-								<label
-									htmlFor="settings-font"
-									className={styles.rowLabel}
-								>
-									Font
-								</label>
-								<select
-									id="settings-font"
-									className="select select-sm flex-1 min-w-0"
-									value={selectedFont}
-									onChange={(e) =>
-										onFontChange(e.target.value)
-									}
-									style={{
-										fontFamily:
-											quoteFonts[
-												selectedFont as keyof typeof quoteFonts
-											]?.family,
-									}}
-								>
-									{Object.entries(quoteFonts).map(
-										([key, font]) => (
-											<option
-												key={key}
-												value={key}
-												style={{
-													fontFamily: font.family,
-												}}
-											>
-												{font.name}
-											</option>
-										)
+							{fontFollowsTheme ? (
+								<>
+									{fontRow(
+										"settings-light-font",
+										"Light font",
+										selectedLightFont,
+										onLightFontChange,
+										!isDarkMode
 									)}
-								</select>
-								<label
-									className="flex items-center gap-1 cursor-pointer"
-									title={
-										fontFollowsTheme
-											? "Separate fonts for light and dark mode"
-											: "Same font in light and dark mode"
+									{fontRow(
+										"settings-dark-font",
+										"Dark font",
+										selectedDarkFont,
+										onDarkFontChange,
+										isDarkMode
+									)}
+								</>
+							) : (
+								fontRow(
+									"settings-font",
+									"Font",
+									selectedQuoteFont,
+									onQuoteFontChange
+								)
+							)}
+							<label className="flex items-center justify-end gap-2 cursor-pointer">
+								<span className="text-xs opacity-70">
+									Different font for light and dark
+								</span>
+								<input
+									type="checkbox"
+									className="toggle toggle-primary toggle-xs"
+									checked={fontFollowsTheme}
+									onChange={(e) =>
+										onFontFollowsThemeChange(
+											e.target.checked
+										)
 									}
-								>
-									<span className="text-xs opacity-70">
-										Per mode
-									</span>
-									<input
-										type="checkbox"
-										className="toggle toggle-primary toggle-xs"
-										checked={fontFollowsTheme}
-										onChange={(e) =>
-											onFontFollowsThemeChange(
-												e.target.checked
-											)
-										}
-										aria-label="Font follows theme"
-									/>
-								</label>
-							</div>
+								/>
+							</label>
 							<div className={styles.row}>
 								<span className={styles.rowLabel}>Size</span>
 								<div className="flex flex-1 items-center gap-2">
