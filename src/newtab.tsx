@@ -261,11 +261,8 @@ function NewTabApp() {
 		storageService.saveSettings({ themeMode: selectedThemeMode });
 	}, [selectedThemeMode]);
 
-	// Cycle theme mode
-	const handleThemeModeChange = () => {
-		setSelectedThemeMode((prev) =>
-			prev === "system" ? "light" : prev === "light" ? "dark" : "system"
-		);
+	const handleThemeModeChange = (mode: "system" | "light" | "dark") => {
+		setSelectedThemeMode(mode);
 	};
 
 	// Apply theme mode override

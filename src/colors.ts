@@ -27,7 +27,7 @@ export const daisyThemeCategories = {
 	light: {
 		name: 'Light Themes',
 		themes: [
-			{ id: 'light', name: 'Light' },
+			{ id: 'light', name: 'Default' },
 			{ id: 'cupcake', name: 'Cupcake' },
 			{ id: 'emerald', name: 'Emerald' },
 			{ id: 'corporate', name: 'Corporate' },
@@ -50,7 +50,7 @@ export const daisyThemeCategories = {
 	dark: {
 		name: 'Dark Themes',
 		themes: [
-			{ id: 'dark', name: 'Dark' },
+			{ id: 'dark', name: 'Default' },
 			{ id: 'synthwave', name: 'Synthwave' },
 			{ id: 'halloween', name: 'Halloween' },
 			{ id: 'forest', name: 'Forest' },
