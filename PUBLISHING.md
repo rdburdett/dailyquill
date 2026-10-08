@@ -98,3 +98,24 @@ Settings → "Share anonymous usage stats". Builds without the keys below send n
    policy URL to the `privacy.html` page on your Vercel site.
 
 Events appear in GA4 under Reports → Realtime within a minute of opening a new tab.
+
+## Reading the numbers (free, no connector)
+
+`npm run ga:report [days]` and the **GA4 usage report** workflow (Actions tab, or ask
+Claude to run it) print active users, events per day and quotes by source, using the
+free Google Analytics Data API with a service account.
+
+1. In the same Google Cloud project as the Chrome Web Store API, go to **APIs & Services →
+   Library**, search for **Google Analytics Data API** and click **Enable**.
+2. **IAM & Admin → Service Accounts → Create service account** (e.g. `ga-reader`). No
+   roles are needed. Open it, go to **Keys → Add key → Create new key → JSON**, and keep
+   the downloaded file safe.
+3. In Google Analytics, **Admin → Property access management → +**, add the service
+   account's email (`ga-reader@….iam.gserviceaccount.com`) with the **Viewer** role.
+4. In **Admin → Property details**, copy the **Property ID** (a number like `497492228`).
+5. Add GitHub repo secrets `GA_PROPERTY_ID` (the number) and `GA_SERVICE_ACCOUNT_JSON`
+   (paste the whole JSON file). For local use, put the same in `.env`; the JSON can also
+   be given as a path to the file.
+6. Optional: to break quotes down by source, go to **Admin → Custom definitions → Create
+   custom dimension**, name it `quote_source`, scope **Event**, event parameter
+   `quote_source`. It only applies to events collected after you create it.

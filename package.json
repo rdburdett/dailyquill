@@ -16,6 +16,7 @@
     "publish:store": "vite build && node scripts/zip-extension.mjs && node scripts/publish-chrome-store.mjs",
     "publish:store:draft": "vite build && node scripts/zip-extension.mjs && node scripts/publish-chrome-store.mjs --upload-only",
     "publish:store:status": "node scripts/publish-chrome-store.mjs --status",
+    "ga:report": "node scripts/ga-report.mjs",
     "resize-icons": "node resize-icons.js"
   },
   "dependencies": {
